@@ -59,15 +59,20 @@ namespace KafkaFlow.Consumers
                 CancellationToken.None);
         }
 
-        public Task StopAsync()
+        public async Task StopAsync()
         {
-            if (this.stopTokenSource != null && !this.stopTokenSource.IsCancellationRequested)
+            if (this.stopTokenSource == null)
             {
-                this.stopTokenSource.Cancel();
-                this.stopTokenSource.Dispose();
+                return;
             }
 
-            return this.feederTask ?? Task.CompletedTask;
+            this.stopTokenSource.Cancel();
+
+            await this.feederTask.ConfigureAwait(false);
+            this.feederTask = null;
+
+            this.stopTokenSource.Dispose();
+            this.stopTokenSource = null;
         }
     }
 }
